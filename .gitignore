@@ -1,0 +1,10 @@
+.DS_Store
+*.pyc
+*pot
+*pid
+.env
+.tox/
+.coverage
+.cache
+coverage.xml
+Session.vim
