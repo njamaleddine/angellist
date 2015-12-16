@@ -2,7 +2,7 @@
 class APIObject(object):
     """ Instantiate an api object instance """
     def __init__(self, **kwargs):
-        self.raw = kwargs
+        self.json = kwargs
 
         for key, value in kwargs.items():
             if isinstance(value, list):
@@ -57,7 +57,14 @@ class Search(APIObject):
 
 class Startup(APIObject):
     def __init__(self, **kwargs):
+        self._comments = []
         return super(Startup, self).__init__(**kwargs)
+
+    @property
+    def comments(self):
+        if self._comments == []:
+            return self.get_comments()
+        return self._comments
 
 
 class StartupRole(APIObject):
@@ -70,7 +77,10 @@ class StatusUpdate(APIObject):
 
 class Tag(APIObject):
     TYPES = (
-        ('location', 'Location')
+        ('LocationTag', 'LocationTag')
+        ('RoleTag', 'RoleTag')
+        ('SkillTag', 'SkillTag')
+        ('MarketTag', 'MarketTag')
     )
 
     def __init__(self, **kwargs):

@@ -9,10 +9,10 @@ class Authentication(object):
     OAUTH_API_URL = 'https://angel.co/api/'
     OAUTH_PATH = 'oauth/'
 
-    def __init__(self, client_id, client_secret):
+    def __init__(self, client_id, client_secret, access_token=None):
         self.client_id = client_id
         self.client_secret = client_secret
-        self.access_token = None
+        self.access_token = access_token
         self.code = None
 
     @property
