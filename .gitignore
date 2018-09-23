@@ -8,3 +8,6 @@
 .cache
 coverage.xml
 Session.vim
+build
+angellist.egg-info/
+dist/

@@ -1,39 +1,53 @@
 import requests
 
+from .auth import Authentication
 from .classes import Startup, Comment, StartupRole, User
+from .config import config
+from .exceptions import AuthenticationError
 
 
-class API(object):
+class AngelList:
     """ Angellist API Object """
-    API_HOST = 'https://api.angel.co/'
-    API_ROOT = '1/'
 
-    def __init__(self, authentication=None, host=API_HOST, api_root=API_ROOT):
-        self.auth = authentication
-        self.host = host
-        self.api_root = api_root
+    def __init__(self, authentication=None, api_url=config.get('API_URL')):
+        self.auth = self._authenticate(authentication)
+        self.api_url = api_url
+
+    def _authenticate(self, authentication=None):
+        if isinstance(authentication, Authentication) and authentication.access_token:
+            return authentication
+        else:
+            cliend_id = config.get('CLIENT_ID')
+            client_secret = config.get('CLIENT_SECRET')
+
+            if cliend_id and client_secret:
+                authentication = Authentication(cliend_id, client_secret)
+                authentication.get_access_token()
+                return authentication
+            raise AuthenticationError(
+                'You must set both ANGELLIST_CLIENT_ID and ANGELLIST_CLIENT_SECRET '
+                'in your environment variables if you want to authenticate without '
+                'passing an Authentication object.'
+            )
+
+    def _access_tokenize(self, url):
+        return '{url}?access_token={access_token}'.format(
+            url=url,
+            access_token=self.auth.access_token
+        )
 
     @property
-    def api_url(self):
-        return '{0}{1}'.format(self.host, self.api_root)
-
-    def access_tokenize(self, url):
-        if self.auth and self.auth.access_token:
-            return '{0}?access_token={1}'.format(url, self.auth.access_token)
-
-    @property
-    def startups_root_url(self):
-        return '{0}{1}{2}'.format(self.host, self.api_root, 'startups/')
-
-    @property
-    def users_root_url(self):
-        return '{0}{1}{2}'.format(self.host, self.api_root, 'users/')
+    def api_urls(self):
+        return {
+            'startups': '{api_url}startups/'.format(api_url=self.api_url),
+            'users': '{api_url}users/'.format(api_url=self.api_url),
+        }
 
     def _get_single_object(self, path, pk, params={}):
         """ Get a single object from the API """
         url = '{0}{1}'.format(path, pk)
         params = params
-        response = requests.get(self.access_tokenize(url), params)
+        response = requests.get(self._access_tokenize(url), params)
         return response
 
     def _get_multiple_objects(self, path, pk=None, list_route=None):
@@ -41,14 +55,14 @@ class API(object):
         if pk and list_route:
             url = '{0}{1}/{2}'.format(path, pk, list_route)
         params = {}
-        response = requests.get(self.access_tokenize(url), params)
+        response = requests.get(self._access_tokenize(url), params)
         return response
 
     def _get_startup(self, pk):
         """
         Returns the response for getting a single startup from an pk
         """
-        return self._get_single_object(path=self.startups_root_url, pk=pk)
+        return self._get_single_object(path=self.api_urls['startups'], pk=pk)
 
     def get_startup(self, pk):
         """ Returns a Startup object with the given pk """
@@ -58,7 +72,7 @@ class API(object):
         """ Get comments for a startup """
         list_route = 'comments'
         response = self._get_multiple_objects(
-            path=self.startups_root_url, pk=pk, list_route=list_route
+            path=self.api_urls['startups'], pk=pk, list_route=list_route
         )
         if response.status_code == 404:
             return None
@@ -75,7 +89,7 @@ class API(object):
         """ Get roles in a startup """
         list_route = 'roles'
         response = self._get_multiple_objects(
-            path=self.startups_root_url, pk=pk, list_route=list_route
+            path=self.api_urls['startups'], pk=pk, list_route=list_route
         )
         if response.status_code == 404:
             return None
@@ -98,7 +112,7 @@ class API(object):
         if include_details:
             params['include_details'] = include_details
         return self._get_single_object(
-            path=self.users_root_url, pk=pk, params=params
+            path=self.api_urls['users'], pk=pk, params=params
         )
 
     def get_user(self, pk):
@@ -108,5 +122,5 @@ class API(object):
     def me(self):
         url = '{0}me'.format(self.api_url)
         params = {}
-        response = requests.get(self.access_tokenize(url), params)
+        response = requests.get(self._access_tokenize(url), params)
         return response

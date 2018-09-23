@@ -1,6 +1,5 @@
-
-class APIObject(object):
-    """ Instantiate an api object instance """
+class Resource(object):
+    """ An AngelList API Resource """
     def __init__(self, **kwargs):
         self.json = kwargs
 
@@ -10,52 +9,58 @@ class APIObject(object):
             else:
                 setattr(self, key, value)
 
+    def __repr__(self):
+        return '<{class_name} {resource_id}>'.format(
+            class_name=self.__class__.name,
+            resource_id=self.id
+        )
 
-class Accreditation(APIObject):
+
+class Accreditation(Resource):
     pass
 
 
-class Comment(APIObject):
+class Comment(Resource):
     pass
 
 
-class Follow(APIObject):
+class Follow(Resource):
     pass
 
 
-class Intro(APIObject):
+class Intro(Resource):
     pass
 
 
-class Job(APIObject):
+class Job(Resource):
     pass
 
 
-class Like(APIObject):
+class Like(Resource):
     pass
 
 
-class Message(APIObject):
+class Message(Resource):
     pass
 
 
-class Path(APIObject):
+class Path(Resource):
     pass
 
 
-class Press(APIObject):
+class Press(Resource):
     pass
 
 
-class Review(APIObject):
+class Review(Resource):
     pass
 
 
-class Search(APIObject):
+class Search(Resource):
     pass
 
 
-class Startup(APIObject):
+class Startup(Resource):
     def __init__(self, **kwargs):
         self._comments = []
         return super(Startup, self).__init__(**kwargs)
@@ -67,20 +72,20 @@ class Startup(APIObject):
         return self._comments
 
 
-class StartupRole(APIObject):
+class StartupRole(Resource):
     pass
 
 
-class StatusUpdate(APIObject):
+class StatusUpdate(Resource):
     pass
 
 
-class Tag(APIObject):
+class Tag(Resource):
     TYPES = (
-        ('LocationTag', 'LocationTag')
-        ('RoleTag', 'RoleTag')
-        ('SkillTag', 'SkillTag')
-        ('MarketTag', 'MarketTag')
+        ('LocationTag', 'LocationTag'),
+        ('RoleTag', 'RoleTag'),
+        ('SkillTag', 'SkillTag'),
+        ('MarketTag', 'MarketTag'),
     )
 
     def __init__(self, **kwargs):
@@ -88,5 +93,5 @@ class Tag(APIObject):
         return super(Startup, self).__init__(**kwargs)
 
 
-class User(APIObject):
+class User(Resource):
     pass

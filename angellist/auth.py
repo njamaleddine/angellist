@@ -1,13 +1,14 @@
-from __future__ import print_function, unicode_literals
+from urllib.parse import urlencode
 
 import requests
 
-from errors import AngellistError
+from .config import config
+from .exceptions import AngellistError
 
 
-class Authentication(object):
-    OAUTH_API_URL = 'https://angel.co/api/'
-    OAUTH_PATH = 'oauth/'
+class Authentication:
+    OAUTH_API_URL = config.get('OAUTH_API_URL')
+    OAUTH_PATH = config.get('OAUTH_PATH')
 
     def __init__(self, client_id, client_secret, access_token=None):
         self.client_id = client_id
@@ -25,7 +26,7 @@ class Authentication(object):
 
         state_variable (str): is used to maintain state between requests. (Not required).
         """
-        url = '{0}{1}'.format(self.oauth_url, 'authorize')
+        url = '{oauth_url}{path}'.format(oauth_url=self.oauth_url, path='authorize')
         params = {
             'client_id': self.client_id,
             'response_type': 'code'
@@ -33,18 +34,14 @@ class Authentication(object):
         if state_variable:
             params['state'] = state_variable
 
-        response = requests.get(url, params)
-
         try:
-            data = response.json()
-            code = data['code']
-            return response
+            response = requests.get(url, params)
+            return response.json().get('code')
         except Exception as e:
-            print(response.json())
             raise AngellistError(e.message)
 
     def get_access_token(self):
-        url = '{0}{1}'.format(self.get_oauth_url(), 'token')
+        url = '{oauth_url}{path}'.format(oauth_url=self.oauth_url, path='token')
         params = {
             'client_id': self.client_id,
             'client_secret': self.client_secret,
@@ -52,12 +49,12 @@ class Authentication(object):
             'grant_type': 'authorization_code'
         }
 
-        response = requests.get(url, params)
+        parameterized_url = '{url}?{params}'.format(
+            url=url, params=urlencode(params)
+        )
 
         try:
-            data = response.json()
-            access_token = data['access_token']
-            return access_token
+            response = requests.post(parameterized_url)
+            return response.json().get('access_token')
         except Exception as e:
-            print(response.json())
             raise AngellistError(e)
